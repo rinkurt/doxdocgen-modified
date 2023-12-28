@@ -8,12 +8,17 @@ class C {
     }
 
     public triggerSequence: string = "/**";
-    public firstLine: string = "/**";
+    public triggerParagraph: string = "/*-";
+    public firstLine: string = "/**********************************************************************";
     public commentPrefix: string = " * ";
-    public lastLine: string = " */";
+    public lastLine: string = " **********************************************************************/";
     public getterText: string = "Get the {name} object";
     public setterText: string = "Set the {name} object";
     public factoryMethodText: string = "Create a {name} object";
+    public functionTemplate: string = "FUNCTION NAME:\n  {name}\n";
+    public interfaceTemplate: string = "INTERFACE:\n  GLOBAL DATA:\n    None\n\n"+
+        "  INPUT:\n    {input}\n\n  OUTPUT:\n    {output}\n\n  INPUT/OUTPUT:\n    None\n\n"+
+        "RETURN CODE:\n  {type}\n";
 }
 
 class Cpp {
@@ -31,11 +36,16 @@ class File {
         return workspace.getConfiguration("doxdocgen.file");
     }
 
-    public fileTemplate: string = "@file {name}";
-    public copyrightTag: string[] = ["@copyright Copyright (c) {year}"];
+    public fileTemplate: string = "FILE NAME:\n  {name}\n\nFILE DESCRIPTION:\n  \n";
+    public copyrightTag: string[] = ["COPYRIGHT:",
+        "  {year}",
+        "  your company",
+        "  All Rights Reserved",
+        "",
+    ];
     public versionTag: string = "@version 0.1";
-    public customTag: string[] = [];
-    public fileOrder: string[] = ["brief", "empty", "file", "author", "date"];
+    public customTag: string[] = ["CHANGE HISTORY:", ""];
+    public fileOrder: string[] = ["copyright", "file", "author", "date", "custom"];
 }
 
 class Generic {
@@ -45,19 +55,19 @@ class Generic {
 
     public includeTypeAtReturn: boolean = true;
     public boolReturnsTrueFalse: boolean = true;
-    public briefTemplate: string = "@brief {text}";
+    public briefTemplate: string = "DESCRIPTION:\n  {text}\n";
     public paramTemplate: string = "@param {param} ";
     public returnTemplate: string = "@return {type} ";
     public linesToGet: number = 20;
     public authorName: string = "your name";
     public authorEmail: string = "you@domain.com";
-    public authorTag: string = "@author {author} ({email})";
-    public dateTemplate: string = "@date {date}";
+    public authorTag: string = "AUTHOR:\n  {author}\n";
+    public dateTemplate: string = "CREATE DATE:\n  {date}\n";
     public dateFormat: string = "YYYY-MM-DD";
     public generateSmartText: boolean = true;
     public splitCasingSmartText: boolean = true;
-    public order: string[] = ["brief", "empty", "tparam", "param", "return"];
-    public customTags: string[] = [];
+    public order: string[] = ["function", "brief", "interface", "custom"];
+    public customTags: string[] = ["NOTES:", "  ", "", "TRACE:", " "];
     public filteredKeywords: string[] = [];
     public useGitUserName: boolean = false;
     public useGitUserEmail: boolean = false;
@@ -68,12 +78,15 @@ export class Config {
         const values: Config = new Config();
 
         values.C.triggerSequence = C.getConfiguration().get<string>("triggerSequence", values.C.triggerSequence);
+        values.C.triggerParagraph = C.getConfiguration().get<string>("triggerParagraph", values.C.triggerParagraph);
         values.C.firstLine = C.getConfiguration().get<string>("firstLine", values.C.firstLine);
         values.C.commentPrefix = C.getConfiguration().get<string>("commentPrefix", values.C.commentPrefix);
         values.C.lastLine = C.getConfiguration().get<string>("lastLine", values.C.lastLine);
         values.C.getterText = C.getConfiguration().get<string>("getterText", values.C.getterText);
         values.C.setterText = C.getConfiguration().get<string>("setterText", values.C.setterText);
         values.C.factoryMethodText = C.getConfiguration().get<string>("factoryMethodText", values.C.factoryMethodText);
+        values.C.functionTemplate = C.getConfiguration().get<string>("functionTemplate", values.C.functionTemplate);
+        values.C.interfaceTemplate = C.getConfiguration().get<string>("interfaceTemplate", values.C.interfaceTemplate);
 
         values.Cpp.tparamTemplate = Cpp.getConfiguration().get<string>("tparamTemplate", values.Cpp.tparamTemplate);
         values.Cpp.ctorText = Cpp.getConfiguration().get<string>("ctorText", values.Cpp.ctorText);
@@ -115,6 +128,8 @@ export class Config {
     public readonly dateTemplateReplace: string = "{date}";
     public readonly yearTemplateReplace: string = "{year}";
     public readonly textTemplateReplace: string = "{text}";
+    public readonly inputTemplateReplace: string = "{input}";
+    public readonly outputTemplateReplace: string = "{output}";
 
     public C: C;
     public Cpp: Cpp;

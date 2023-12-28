@@ -1,9 +1,9 @@
 {
   "name": "doxdocgen",
-  "displayName": "Doxygen Documentation Generator",
+  "displayName": "Doxygen Documentation Generator (Modified)",
   "description": "Let me generate Doxygen documentation from your source code for you.",
   "version": "1.4.0",
-  "publisher": "cschlosser",
+  "publisher": "rinkurt",
   "engines": {
     "vscode": "^1.55.0"
   },
@@ -43,10 +43,14 @@
           "type": "string",
           "default": "/**"
         },
+        "doxdocgen.c.triggerParagraph": {
+          "type": "string",
+          "default": "/*-"
+        },
         "doxdocgen.c.firstLine": {
           "description": "The first line of the comment that gets generated. If empty it won't get generated at all.",
           "type": "string",
-          "default": "/**"
+          "default": "/**********************************************************************"
         },
         "doxdocgen.c.commentPrefix": {
           "description": "The prefix that is used for each comment line except for first and last.",
@@ -56,7 +60,7 @@
         "doxdocgen.c.lastLine": {
           "description": "The last line of the comment that gets generated. If empty it won't get generated at all.",
           "type": "string",
-          "default": " */"
+          "default": " **********************************************************************/"
         },
         "doxdocgen.c.setterText": {
           "description": "Smart text snippet for setters.",
@@ -72,6 +76,14 @@
           "description": "Smart text snippet for factory methods/functions.",
           "type": "string",
           "default": "Create a {name} object"
+        },
+        "doxdocgen.c.functionTemplate": {
+          "type": "string",
+          "default": "FUNCTION NAME:\n  {name}\n"
+        },
+        "doxdocgen.c.interfaceTemplate": {
+          "type": "string",
+          "default": "INTERFACE:\n  GLOBAL DATA:\n    None\n\n  INPUT:\n    {input}\n\n  OUTPUT:\n    {output}\n\n  INPUT/OUTPUT:\n    None\n\nRETURN CODE:\n  {type}\n"
         },
         "doxdocgen.cpp.tparamTemplate": {
           "description": "The template of the template parameter Doxygen line(s) that are generated. If empty it won't get generated at all.",
@@ -91,7 +103,7 @@
         "doxdocgen.file.fileTemplate": {
           "description": "The template for the file parameter in Doxygen.",
           "type": "string",
-          "default": "@file {name}"
+          "default": "FILE NAME:\n  {name}\n\nFILE DESCRIPTION:\n  \n"
         },
         "doxdocgen.file.copyrightTag": {
           "markdownDescription": "File copyright documentation tag.  Array of strings will be converted to one line per element. Can template `{year}`.",
@@ -99,8 +111,11 @@
             "array",
             "string"
           ],
-          "default": [
-            "@copyright Copyright (c) {year}"
+          "default": ["COPYRIGHT:",
+            "  {year}",
+            "  your company",
+            "  All Rights Reserved",
+            ""
           ]
         },
         "doxdocgen.file.versionTag": {
@@ -114,7 +129,7 @@
             "array",
             "string"
           ],
-          "default": []
+          "default": ["CHANGE HISTORY:", ""]
         },
         "doxdocgen.file.fileOrder": {
           "markdownDescription": "The order to use for the file comment. Values can be used multiple times. Valid values are `file`, `author`, `brief`, `version`, `date`, `empty`, `copyright` and `custom`.",
@@ -122,17 +137,7 @@
             "array",
             "string"
           ],
-          "default": [
-            "file",
-            "author",
-            "brief",
-            "version",
-            "date",
-            "empty",
-            "copyright",
-            "empty",
-            "custom"
-          ]
+          "default": ["copyright", "file", "author", "date", "custom"]
         },
         "doxdocgen.generic.includeTypeAtReturn": {
           "description": "Whether include type information at return.",
@@ -147,7 +152,7 @@
         "doxdocgen.generic.briefTemplate": {
           "description": "The template of the brief Doxygen line that is generated. If empty it won't get generated at all.",
           "type": "string",
-          "default": "@brief {text}"
+          "default": "DESCRIPTION:\n  {text}\n"
         },
         "doxdocgen.generic.paramTemplate": {
           "description": "The template of the param Doxygen line(s) that are generated. If empty it won't get generated at all.",
@@ -177,12 +182,12 @@
         "doxdocgen.generic.authorTag": {
           "markdownDescription": "Set the style of the author tag and your name.  Can template `{author}` and `{email}`.",
           "type": "string",
-          "default": "@author {author} ({email})"
+          "default": "AUTHOR:\n  {author}\n"
         },
         "doxdocgen.generic.dateTemplate": {
           "description": "The template for the date parameter in Doxygen.",
           "type": "string",
-          "default": "@date {date}"
+          "default": "CREATE DATE:\n  {date}\n"
         },
         "doxdocgen.generic.dateFormat": {
           "description": "The format to use for the date.",
@@ -205,14 +210,7 @@
             "array",
             "string"
           ],
-          "default": [
-            "brief",
-            "empty",
-            "tparam",
-            "param",
-            "return",
-            "custom"
-          ]
+          "default": ["function", "brief", "interface", "custom"]
         },
         "doxdocgen.generic.customTags": {
           "markdownDescription": "Custom tags to be added to the generic order. One tag per line will be added. Can template `{year}`, `{date}`, `{author}`, `{email}` and `{file}`. You have to specify the prefix.",
@@ -220,7 +218,7 @@
             "array",
             "string"
           ],
-          "default": []
+          "default": ["NOTES:", "  ", "", "TRACE:", " "]
         },
         "doxdocgen.generic.filteredKeywords": {
           "description": "Array of keywords that should be removed from the input prior to parsing.",
@@ -279,7 +277,8 @@
     "env-var": "^4.1.0",
     "moment": "^2.29.4",
     "opn": "^5.2.0",
-    "simple-git": "^3.5.0"
+    "simple-git": "^3.5.0",
+    "yarn": "^1.22.21"
   },
   "devDependencies": {
     "@istanbuljs/nyc-config-typescript": "0.1.3",

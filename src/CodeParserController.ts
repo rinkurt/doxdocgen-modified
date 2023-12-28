@@ -20,6 +20,7 @@ import { inComment } from "./util";
  * @export
  * @class CodeParserController
  */
+enum Trigger {Normal, Paragraph, None}
 export default class CodeParserController {
     private disposable: Disposable;
     private cfg: Config;
@@ -60,10 +61,10 @@ export default class CodeParserController {
                                     Implementation
      ***************************************************************************/
 
-    private check(activeEditor: TextEditor, event: TextDocumentContentChangeEvent): boolean {
+    private check(activeEditor: TextEditor, event: TextDocumentContentChangeEvent): Trigger {
         if (activeEditor === undefined || activeEditor == null ||
             event === undefined || event.text == null) {
-            return false;
+            return Trigger.None;
         }
         const activeSelection: Position = activeEditor.selection.active;
         const activeLine: TextLine = activeEditor.document.lineAt(activeSelection.line);
@@ -72,46 +73,70 @@ export default class CodeParserController {
 
         // Check if enter was pressed. Note the !
         if (!((activeChar === "") && startsWith)) {
-            return false;
+            return Trigger.None;
         }
 
         // Check if currently in a comment block
         if (inComment(activeEditor, activeSelection.line)) {
-            return false;
+            return Trigger.None;
         }
 
         // Do not trigger when there's whitespace after the trigger sequence
         // tslint:disable-next-line:max-line-length
-        const seq = "[\\s]*(" + this.cfg.C.triggerSequence.replace(/[\-\[\]\/\{\}\(\)\*\+\?\.\\\^\$\|]/g, "\\$&") + ")$";
-        const match: RegExpMatchArray = activeLine.text.match(seq);
+        let seq = "[\\s]*(" + this.cfg.C.triggerSequence.replace(/[\-\[\]\/\{\}\(\)\*\+\?\.\\\^\$\|]/g, "\\$&") + ")$";
+        let match: RegExpMatchArray = activeLine.text.match(seq);
 
         if (match !== null) {
             const cont: string = match[1];
-            return this.cfg.C.triggerSequence === cont;
-        } else {
-            return false;
+            if (this.cfg.C.triggerSequence === cont) {
+                return Trigger.Normal;
+            }
         }
+
+        seq = "[\\s]*(" + this.cfg.C.triggerParagraph.replace(/[\-\[\]\/\{\}\(\)\*\+\?\.\\\^\$\|]/g, "\\$&") + ")$";
+        match = activeLine.text.match(seq);
+
+        if (match !== null) {
+            const cont: string = match[1];
+            if (this.cfg.C.triggerParagraph === cont) {
+                return Trigger.Paragraph;
+            }
+        }
+
+        return Trigger.None;
     }
 
     private onEvent(activeEditor: TextEditor, event: TextDocumentContentChangeEvent) {
-        if (!this.check(activeEditor, event)) {
+        let chk = this.check(activeEditor, event);
+        if (chk == Trigger.None) {
             return null;
         }
 
         const lang: string = activeEditor.document.languageId;
         let parser: CodeParser;
 
-        switch (lang) {
-            case "c":
-            case "cpp":
-            case "cuda":
-            case "cuda-cpp":
-                parser = new CppParser(this.cfg);
-                break;
-            default:
-                // tslint:disable-next-line:no-console
-                console.log("No comments can be generated for language: " + lang);
-                return null;
+        if (chk == Trigger.Normal) {
+            switch (lang) {
+                case "c":
+                case "cpp":
+                case "cuda":
+                case "cuda-cpp":
+                    parser = new CppParser(this.cfg);
+                    break;
+                default:
+                    // tslint:disable-next-line:no-console
+                    console.log("No comments can be generated for language: " + lang);
+                    return null;
+            }
+        } else if (chk == Trigger.Paragraph) {
+            let conf = new Config();
+            conf.File.fileOrder = []
+            conf.Generic.order = []
+            conf.C.firstLine = "/*-------------------------  -------------------------*/"
+            conf.C.lastLine = "";
+            parser = new CppParser(conf);
+        } else {
+            return null;
         }
 
         const currentPos: Position = window.activeTextEditor.selection.active;

@@ -393,6 +393,40 @@ export class CppDocGen implements IDocGen {
 
         this.cfg.Generic.order.forEach((element) => {
             switch (element) {
+                case "interface": {
+                    let ip: string[] = [];
+                    let op: string[] = [];
+                    this.params.forEach((param) => {
+                        let typ = param.type.Yield();
+                        if (typ.endsWith("*")) {
+                            op.push(typ + " " + param.name);
+                        } else {
+                            ip.push(typ + " " + param.name);
+                        }
+                    })
+                    lines.push(
+                        ...templates.getMultiTemplatedString(
+                            this.cfg.C.interfaceTemplate,
+                            [
+                                { toReplace: this.cfg.inputTemplateReplace, with: ip.length > 0 ? ip.join("\n    ") : "None" },
+                                { toReplace: this.cfg.outputTemplateReplace, with: op.length > 0 ? op.join("\n    ") : "None" },
+                                { toReplace: this.cfg.typeTemplateReplace, with: this.func.type.Yield() },
+                            ],
+                        ).split("\n"),
+                    );
+                    break;
+                }
+                case "function": {
+                    if (this.cfg.C.functionTemplate.trim().length !== 0 && this.func.name != null && this.func.name.length > 0) {
+                        templates.generateFromTemplate(
+                            lines,
+                            this.cfg.nameTemplateReplace,
+                            this.cfg.C.functionTemplate,
+                            [this.func.name],
+                        );
+                    }
+                    break;
+                }
                 case "tparam": {
                     if (this.cfg.Cpp.tparamTemplate.trim().length !== 0 && this.templateParams.length > 0) {
                         templates.generateFromTemplate(
